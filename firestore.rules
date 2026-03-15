@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function uidNotModified() {
+      return !('uid' in request.resource.data) || request.resource.data.uid == resource.data.uid;
+    }
+
+    function isValidEmployee(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.role in ['Gerente', 'Senior', 'Pleno', 'Junior', 'Estagiário'] &&
+             data.salary is number && data.salary >= 0 &&
+             data.status in ['Disponível', 'Tratamento de Saúde', 'Férias', 'Viagem a Trabalho', 'Na Empresa', 'Home Office', 'Fora de Expediente', 'Atestado'];
+    }
+
+    function isValidExpense(data) {
+      return data.type in ['API', 'Cloud', 'Licença', 'Água', 'Luz', 'Internet', 'Outros'] &&
+             data.amount is number && data.amount >= 0 &&
+             data.currency in ['USD', 'EUR', 'BRL'];
+    }
+
+    function isValidInventoryItem(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.quantity is number && data.quantity >= 0 &&
+             data.unitPrice is number && data.unitPrice >= 0;
+    }
+
+    function isValidRevenueRecord(data) {
+      return data.type in ['in', 'out'] &&
+             data.amount is number && data.amount >= 0 &&
+             data.category is string && data.category.size() > 0;
+    }
+
+    function isValidSubscription(data) {
+      return data.plan in ['free', 'pro'] &&
+             data.status in ['active', 'canceled'];
+    }
+
+    function isValidPortfolio(data) {
+      return data.companyName is string && data.companyName.size() > 0 && data.companyName.size() < 100 &&
+             (data.tagline == null || (data.tagline is string && data.tagline.size() < 200)) &&
+             (data.description == null || (data.description is string && data.description.size() < 2000)) &&
+             (data.logoUrl == null || (data.logoUrl is string && data.logoUrl.size() < 500)) &&
+             (data.mission == null || (data.mission is string && data.mission.size() < 1000)) &&
+             (data.vision == null || (data.vision is string && data.vision.size() < 1000)) &&
+             (data.values == null || data.values is list);
+    }
+
+    match /employees/{employeeId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.uid) && isValidEmployee(request.resource.data);
+      allow update: if isAuthenticated() && isOwner(resource.data.uid) && uidNotModified() && isValidEmployee(request.resource.data);
+      allow delete: if isAuthenticated() && isOwner(resource.data.uid);
+    }
+
+    match /expenses/{expenseId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.uid) && isValidExpense(request.resource.data);
+      allow update: if isAuthenticated() && isOwner(resource.data.uid) && uidNotModified() && isValidExpense(request.resource.data);
+      allow delete: if isAuthenticated() && isOwner(resource.data.uid);
+    }
+
+    match /inventory/{itemId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.uid) && isValidInventoryItem(request.resource.data);
+      allow update: if isAuthenticated() && isOwner(resource.data.uid) && uidNotModified() && isValidInventoryItem(request.resource.data);
+      allow delete: if isAuthenticated() && isOwner(resource.data.uid);
+    }
+
+    match /revenue/{recordId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.uid) && isValidRevenueRecord(request.resource.data);
+      allow update: if isAuthenticated() && isOwner(resource.data.uid) && uidNotModified() && isValidRevenueRecord(request.resource.data);
+      allow delete: if isAuthenticated() && isOwner(resource.data.uid);
+    }
+
+    match /subscriptions/{subId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.uid) && isValidSubscription(request.resource.data);
+      allow update: if isAuthenticated() && isOwner(resource.data.uid) && uidNotModified() && isValidSubscription(request.resource.data);
+      allow delete: if isAuthenticated() && isOwner(resource.data.uid);
+    }
+
+    match /portfolios/{portfolioId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.uid == request.auth.uid);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.uid) && isValidPortfolio(request.resource.data);
+      allow update: if isAuthenticated() && isOwner(resource.data.uid) && uidNotModified() && isValidPortfolio(request.resource.data);
+      allow delete: if isAuthenticated() && isOwner(resource.data.uid);
+    }
+  }
+}
