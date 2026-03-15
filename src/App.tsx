@@ -151,8 +151,26 @@ export default function App() {
   const [revenue, setRevenue] = useState<RevenueRecord[]>([]);
   const [portfolio, setPortfolio] = useState<CompanyPortfolio | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [rates] = useState({ USD: 5.0, EUR: 5.4, BRL: 1.0 });
+  const [rates, setRates] = useState({ USD: 5.0, EUR: 5.4, BRL: 1.0 });
+  const [displayCurrency, setDisplayCurrency] = useState<Currency>('BRL');
   
+  useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const response = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL,EUR-BRL');
+        const data = await response.json();
+        setRates({
+          USD: Number(data.USDBRL.ask),
+          EUR: Number(data.EURBRL.ask),
+          BRL: 1.0
+        });
+      } catch (error) {
+        console.error('Erro ao buscar taxas de câmbio:', error);
+      }
+    };
+    fetchRates();
+  }, []);
+
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' || 
@@ -511,12 +529,20 @@ export default function App() {
     }
   };
 
-  const convertToBRL = (amount: number, currency: Currency) => {
-    return amount * rates[currency];
+  const convertAmount = (amount: number, from: Currency, to: Currency) => {
+    const amountInBRL = amount * rates[from];
+    return amountInBRL / rates[to];
   };
 
-  const totalMonthlyExpenses = expenses.reduce((acc, curr) => acc + convertToBRL(curr.amount, curr.currency), 0);
-  const totalSalaries = employees.reduce((acc, curr) => acc + curr.salary, 0);
+  const formatCurrency = (amount: number, currency: Currency) => {
+    return new Intl.NumberFormat(currency === 'BRL' ? 'pt-BR' : currency === 'USD' ? 'en-US' : 'de-DE', {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
+  };
+
+  const totalMonthlyExpenses = expenses.reduce((acc, curr) => acc + convertAmount(curr.amount, curr.currency, displayCurrency), 0);
+  const totalSalaries = employees.reduce((acc, curr) => acc + convertAmount(curr.salary, 'BRL', displayCurrency), 0);
 
   const runAiAnalysis = async (employee: Employee) => {
     setAiAnalysis(null);
@@ -742,6 +768,22 @@ export default function App() {
                       <input type="file" accept=".json" onChange={importData} className="hidden" />
                     </label>
                   </div>
+                  <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 ml-2" />
+                  <div className={`flex p-1 rounded-lg border ml-2 ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
+                    {(['BRL', 'USD', 'EUR'] as Currency[]).map(c => (
+                      <button
+                        key={c}
+                        onClick={() => setDisplayCurrency(c)}
+                        className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
+                          displayCurrency === c 
+                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' 
+                            : isDarkMode ? 'text-zinc-500 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                        }`}
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="text-right">
@@ -753,8 +795,8 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 { label: 'Capital Humano', value: employees.length, icon: Users, color: 'emerald', sub: 'Colaboradores ativos' },
-                { label: 'Folha Mensal', value: `R$ ${totalSalaries.toLocaleString()}`, icon: DollarSign, color: 'blue', sub: 'Comprometimento salarial' },
-                { label: 'OPEX Operacional', value: `R$ ${totalMonthlyExpenses.toLocaleString()}`, icon: Calculator, color: 'orange', sub: 'Gastos correntes' },
+                { label: 'Folha Mensal', value: formatCurrency(totalSalaries, displayCurrency), icon: DollarSign, color: 'blue', sub: 'Comprometimento salarial' },
+                { label: 'OPEX Operacional', value: formatCurrency(totalMonthlyExpenses, displayCurrency), icon: Calculator, color: 'orange', sub: 'Gastos correntes' },
               ].map((stat, i) => (
                 <div key={i} className={`p-8 rounded-[32px] border transition-all hover:scale-[1.02] ${
                   isDarkMode ? 'bg-zinc-900/50 border-zinc-800 shadow-2xl shadow-black/50' : 'bg-white border-slate-200 shadow-xl shadow-slate-200/50'
@@ -813,10 +855,10 @@ export default function App() {
                           { name: 'Pleno', value: employees.filter(e => e.role === 'Pleno').length },
                           { name: 'Junior', value: employees.filter(e => e.role === 'Junior').length },
                         ] : [
-                          { name: 'API', value: expenses.filter(ex => ex.type === 'API').reduce((a, c) => a + convertToBRL(c.amount, c.currency), 0) },
-                          { name: 'Cloud', value: expenses.filter(ex => ex.type === 'Cloud').reduce((a, c) => a + convertToBRL(c.amount, c.currency), 0) },
-                          { name: 'Utilidades', value: expenses.filter(ex => ['Luz', 'Água', 'Internet'].includes(ex.type)).reduce((a, c) => a + convertToBRL(c.amount, c.currency), 0) },
-                          { name: 'Licença', value: expenses.filter(ex => ex.type === 'Licença').reduce((a, c) => a + convertToBRL(c.amount, c.currency), 0) },
+                          { name: 'API', value: expenses.filter(ex => ex.type === 'API').reduce((a, c) => a + convertAmount(c.amount, c.currency, displayCurrency), 0) },
+                          { name: 'Cloud', value: expenses.filter(ex => ex.type === 'Cloud').reduce((a, c) => a + convertAmount(c.amount, c.currency, displayCurrency), 0) },
+                          { name: 'Utilidades', value: expenses.filter(ex => ['Luz', 'Água', 'Internet'].includes(ex.type)).reduce((a, c) => a + convertAmount(c.amount, c.currency, displayCurrency), 0) },
+                          { name: 'Licença', value: expenses.filter(ex => ex.type === 'Licença').reduce((a, c) => a + convertAmount(c.amount, c.currency, displayCurrency), 0) },
                         ]}>
                           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#27272a' : '#f1f5f9'} />
                           <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: isDarkMode ? '#a1a1aa' : '#64748b' }} />
@@ -914,7 +956,7 @@ export default function App() {
                           </div>
                         </td>
                         <td className="px-6 py-4 font-mono text-sm">
-                          <span className={isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}>R$ {emp.salary.toLocaleString()}</span>
+                          <span className={isDarkMode ? 'text-emerald-400' : 'text-emerald-700'}>{formatCurrency(convertAmount(emp.salary, 'BRL', displayCurrency), displayCurrency)}</span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
@@ -963,26 +1005,43 @@ export default function App() {
                 <h2 className="text-3xl font-bold tracking-tight">Gastos & Finanças</h2>
                 <p className="text-zinc-500">Controle de despesas operacionais e conversão de moedas.</p>
               </div>
-              <button 
-                onClick={() => setIsExpenseModalOpen(true)}
-                className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 hover:bg-black transition-colors shadow-lg"
-              >
-                <Plus className="w-5 h-5" /> Registrar Gasto
-              </button>
+              <div className="flex items-center gap-4">
+                <div className={`flex p-1 rounded-lg border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
+                  {(['BRL', 'USD', 'EUR'] as Currency[]).map(c => (
+                    <button
+                      key={c}
+                      onClick={() => setDisplayCurrency(c)}
+                      className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
+                        displayCurrency === c 
+                          ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' 
+                          : isDarkMode ? 'text-zinc-500 hover:text-white' : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => setIsExpenseModalOpen(true)}
+                  className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 hover:bg-black transition-colors shadow-lg"
+                >
+                  <Plus className="w-5 h-5" /> Registrar Gasto
+                </button>
+              </div>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className={`p-6 rounded-2xl border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-black/5'}`}>
-                <p className="text-xs font-mono uppercase text-zinc-400 mb-1">Câmbio USD</p>
-                <p className="text-xl font-bold">R$ {rates.USD.toFixed(2)}</p>
+                <p className="text-xs font-mono uppercase text-zinc-400 mb-1">Câmbio {displayCurrency === 'USD' ? 'BRL' : 'USD'}</p>
+                <p className="text-xl font-bold">{formatCurrency(convertAmount(1, displayCurrency === 'USD' ? 'BRL' : 'USD', displayCurrency), displayCurrency)}</p>
               </div>
               <div className={`p-6 rounded-2xl border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-black/5'}`}>
-                <p className="text-xs font-mono uppercase text-zinc-400 mb-1">Câmbio EUR</p>
-                <p className="text-xl font-bold">R$ {rates.EUR.toFixed(2)}</p>
+                <p className="text-xs font-mono uppercase text-zinc-400 mb-1">Câmbio {displayCurrency === 'EUR' ? 'BRL' : 'EUR'}</p>
+                <p className="text-xl font-bold">{formatCurrency(convertAmount(1, displayCurrency === 'EUR' ? 'BRL' : 'EUR', displayCurrency), displayCurrency)}</p>
               </div>
               <div className="bg-emerald-600 p-6 rounded-2xl text-white shadow-lg shadow-emerald-600/20">
-                <p className="text-xs font-mono uppercase text-emerald-100 mb-1">Total Mensal (BRL)</p>
-                <p className="text-2xl font-bold">R$ {totalMonthlyExpenses.toLocaleString()}</p>
+                <p className="text-xs font-mono uppercase text-emerald-100 mb-1">Total Mensal ({displayCurrency})</p>
+                <p className="text-2xl font-bold">{formatCurrency(totalMonthlyExpenses, displayCurrency)}</p>
               </div>
             </div>
 
@@ -996,18 +1055,18 @@ export default function App() {
                     <thead>
                       <tr className={`${isDarkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-zinc-50 border-black/5'} border-b`}>
                         <th className="px-6 py-3 text-xs font-mono uppercase text-zinc-400">Categoria</th>
-                        <th className="px-6 py-3 text-xs font-mono uppercase text-zinc-400">Total (BRL)</th>
+                        <th className="px-6 py-3 text-xs font-mono uppercase text-zinc-400">Total ({displayCurrency})</th>
                         <th className="px-6 py-3 text-xs font-mono uppercase text-zinc-400">%</th>
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${isDarkMode ? 'divide-zinc-800' : 'divide-black/5'}`}>
                       {['API', 'Cloud', 'Licença', 'Água', 'Luz', 'Internet'].map(cat => {
-                        const total = expenses.filter(ex => ex.type === cat).reduce((a, c) => a + convertToBRL(c.amount, c.currency), 0);
+                        const total = expenses.filter(ex => ex.type === cat).reduce((a, c) => a + convertAmount(c.amount, c.currency, displayCurrency), 0);
                         const percentage = totalMonthlyExpenses > 0 ? (total / totalMonthlyExpenses) * 100 : 0;
                         return (
                           <tr key={cat} className={isDarkMode ? 'hover:bg-zinc-800/50' : 'hover:bg-zinc-50/50'}>
                             <td className="px-6 py-4 font-medium">{cat}</td>
-                            <td className="px-6 py-4 font-mono">R$ {total.toLocaleString()}</td>
+                            <td className="px-6 py-4 font-mono">{formatCurrency(total, displayCurrency)}</td>
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
                                 <div className={`flex-1 h-1.5 rounded-full overflow-hidden ${isDarkMode ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
@@ -1049,7 +1108,7 @@ export default function App() {
                           </div>
                           <div className="text-right">
                             <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>{ex.currency} {ex.amount.toLocaleString()}</p>
-                            <p className="text-xs text-emerald-500 font-medium">≈ R$ {convertToBRL(ex.amount, ex.currency).toLocaleString()}</p>
+                            <p className="text-xs text-emerald-500 font-medium">≈ {formatCurrency(convertAmount(ex.amount, ex.currency, displayCurrency), displayCurrency)}</p>
                           </div>
                         </div>
                   ))}
@@ -1285,7 +1344,7 @@ export default function App() {
                               </div>
                               <div className="text-right">
                                 <p className="text-[10px] text-zinc-500 uppercase font-bold">Valor Total</p>
-                                <p className="text-emerald-500 font-bold">R$ {(item.quantity * item.unitPrice).toLocaleString()}</p>
+                                <p className="text-emerald-500 font-bold">{formatCurrency(convertAmount(item.quantity * item.unitPrice, 'BRL', displayCurrency), displayCurrency)}</p>
                               </div>
                             </div>
                           </div>
