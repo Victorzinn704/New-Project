@@ -268,7 +268,7 @@ App em `http://localhost:3000`.
 
 ## 👤 Autor
 
-Construído por **João Victor de Moraes da Cruz** — estudante de Engenharia de Software e founder do [Desk Imperial](https://github.com/Victorzinn704/Desk-Imperial-Open-Source).
+Construído por **João Victor de Moraes da Cruz** — estudante de Engenharia de Software e fundador do [Desk Imperial](https://github.com/Victorzinn704/Desk-Imperial-Open-Source).
 
 <p>
   <a href="https://github.com/Victorzinn704"><img src="https://img.shields.io/badge/GitHub-111827?style=for-the-badge&logo=github&logoColor=white"></a>
