@@ -1,24 +1,10 @@
 import { Plus, BrainCircuit, TrendingUp, FileText, Filter } from 'lucide-react';
-import { Expense, Currency } from '../../types';
+import { Currency } from '../../types';
 import { convertAmount, formatCurrency } from '../../utils/currency';
+import { useAppContext } from '../../contexts/AppContext';
 
-interface ExpensesTabProps {
-  expenses: Expense[];
-  displayCurrency: Currency;
-  rates: { USD: number; EUR: number; BRL: number };
-  isDarkMode: boolean;
-  onCurrencyChange: (currency: Currency) => void;
-  onAddExpense: () => void;
-}
-
-export function ExpensesTab({
-  expenses,
-  displayCurrency,
-  rates,
-  isDarkMode,
-  onCurrencyChange,
-  onAddExpense,
-}: ExpensesTabProps) {
+export function ExpensesTab() {
+  const { expenses, displayCurrency, rates, isDarkMode, setDisplayCurrency, openExpenseModal } = useAppContext();
   const totalMonthlyExpenses = expenses.reduce((acc, curr) => acc + convertAmount(curr.amount, curr.currency, displayCurrency, rates), 0);
 
   return (
@@ -33,7 +19,7 @@ export function ExpensesTab({
             {(['BRL', 'USD', 'EUR'] as Currency[]).map(c => (
               <button
                 key={c}
-                onClick={() => onCurrencyChange(c)}
+                onClick={() => setDisplayCurrency(c)}
                 className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
                   displayCurrency === c
                     ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
@@ -45,7 +31,7 @@ export function ExpensesTab({
             ))}
           </div>
           <button
-            onClick={onAddExpense}
+            onClick={openExpenseModal}
             className="bg-zinc-900 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 hover:bg-black transition-colors shadow-lg"
           >
             <Plus className="w-5 h-5" /> Registrar Gasto

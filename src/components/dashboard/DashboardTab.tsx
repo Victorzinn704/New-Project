@@ -5,30 +5,12 @@ import {
 } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Employee, Expense, Currency } from '../../types';
+import { Currency } from '../../types';
 import { COLORS, convertAmount, formatCurrency } from '../../utils/currency';
+import { useAppContext } from '../../contexts/AppContext';
 
-interface DashboardTabProps {
-  employees: Employee[];
-  expenses: Expense[];
-  displayCurrency: Currency;
-  rates: { USD: number; EUR: number; BRL: number };
-  isDarkMode: boolean;
-  onCurrencyChange: (currency: Currency) => void;
-  onExport: () => void;
-  onImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-export function DashboardTab({
-  employees,
-  expenses,
-  displayCurrency,
-  rates,
-  isDarkMode,
-  onCurrencyChange,
-  onExport,
-  onImport,
-}: DashboardTabProps) {
+export function DashboardTab() {
+  const { employees, expenses, displayCurrency, rates, isDarkMode, setDisplayCurrency, exportData, importData } = useAppContext();
   const totalMonthlyExpenses = expenses.reduce((acc, curr) => acc + convertAmount(curr.amount, curr.currency, displayCurrency, rates), 0);
   const totalSalaries = employees.reduce((acc, curr) => acc + convertAmount(curr.salary, 'BRL', displayCurrency, rates), 0);
 
@@ -62,7 +44,7 @@ export function DashboardTab({
             <p className={`text-sm font-medium ${isDarkMode ? 'text-zinc-500' : 'text-slate-500'}`}>Inteligência de dados e monitoramento em tempo real.</p>
             <div className="flex items-center gap-2 ml-4">
               <button
-                onClick={onExport}
+                onClick={exportData}
                 className={`p-2 rounded-lg border transition-all flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest ${
                   isDarkMode ? 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800' : 'bg-white border-slate-200 hover:bg-slate-50'
                 }`}
@@ -76,7 +58,7 @@ export function DashboardTab({
               }`} title="Importar Backup">
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
                 Importar
-                <input type="file" accept=".json" onChange={onImport} className="hidden" />
+                <input type="file" accept=".json" onChange={importData} className="hidden" />
               </label>
             </div>
             <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 ml-2" />
@@ -84,7 +66,7 @@ export function DashboardTab({
               {(['BRL', 'USD', 'EUR'] as Currency[]).map(c => (
                 <button
                   key={c}
-                  onClick={() => onCurrencyChange(c)}
+                  onClick={() => setDisplayCurrency(c)}
                   className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-all ${
                     displayCurrency === c
                       ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'

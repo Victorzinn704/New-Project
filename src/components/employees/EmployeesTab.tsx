@@ -1,28 +1,15 @@
 import { Plus, BrainCircuit, Edit2, Trash2 } from 'lucide-react';
-import { Employee, Currency } from '../../types';
+import { Employee } from '../../types';
 import { ROLE_HIERARCHY, convertAmount, formatCurrency } from '../../utils/currency';
+import { useAppContext } from '../../contexts/AppContext';
 
-interface EmployeesTabProps {
-  employees: Employee[];
-  isDarkMode: boolean;
-  displayCurrency: Currency;
-  rates: { USD: number; EUR: number; BRL: number };
-  onAddNew: () => void;
-  onEdit: (employee: Employee) => void;
-  onDelete: (id: string) => void;
-  onAiAnalysis: (employee: Employee) => void;
-}
+export function EmployeesTab() {
+  const { employees, isDarkMode, displayCurrency, rates, openEmployeeModal, deleteEmployee, selectEmployee, runAiAnalysis } = useAppContext();
 
-export function EmployeesTab({
-  employees,
-  isDarkMode,
-  displayCurrency,
-  rates,
-  onAddNew,
-  onEdit,
-  onDelete,
-  onAiAnalysis,
-}: EmployeesTabProps) {
+  const handleAiAnalysis = (employee: Employee) => {
+    selectEmployee(employee);
+    runAiAnalysis(employee);
+  };
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
       <header className="flex justify-between items-center">
@@ -31,7 +18,7 @@ export function EmployeesTab({
           <p className="text-zinc-500">Gerencie sua equipe e acompanhe disponibilidades.</p>
         </div>
         <button
-          onClick={onAddNew}
+          onClick={() => openEmployeeModal(null)}
           className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20"
         >
           <Plus className="w-5 h-5" /> Novo Funcionário
@@ -97,21 +84,21 @@ export function EmployeesTab({
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => onAiAnalysis(emp)}
+                        onClick={() => handleAiAnalysis(emp)}
                         className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-zinc-800 text-emerald-500' : 'hover:bg-emerald-50 text-emerald-600'}`}
                         title="Análise IA"
                       >
                         <BrainCircuit className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => onEdit(emp)}
+                        onClick={() => openEmployeeModal(emp)}
                         className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-zinc-800 text-blue-500' : 'hover:bg-blue-50 text-blue-600'}`}
                         title="Editar"
                       >
                         <Edit2 className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => onDelete(emp.id!)}
+                        onClick={() => deleteEmployee(emp.id!)}
                         className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-zinc-800 text-red-500' : 'hover:bg-red-50 text-red-600'}`}
                         title="Excluir"
                       >
