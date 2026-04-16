@@ -60,7 +60,7 @@ describe('EmployeeFormModal', () => {
 
     render(<EmployeeFormModal {...defaultProps} onClose={handleClose} />);
 
-    const closeBtn = screen.getByRole('button', { name: '' });
+    const closeBtn = screen.getByRole('button', { name: /fechar modal/i });
     await user.click(closeBtn);
 
     expect(handleClose).toHaveBeenCalled();

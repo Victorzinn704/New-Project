@@ -61,36 +61,50 @@ export function Sidebar({
 
       <nav className="flex-1 px-4 space-y-1">
         {mainNav.map((item) => (
-          <button
+          <NavLink
             key={item.id}
-            onClick={() => onTabChange(item.id as 'dashboard' | 'employees' | 'expenses' | 'ai' | 'pro')}
-            className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-200 group relative ${
-              activeTab === item.id
+            to={item.path}
+            className={({ isActive }) => `w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-200 group relative ${
+              isActive
                 ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 font-semibold'
                 : `text-zinc-500 hover:translate-x-1 ${isDarkMode ? 'hover:bg-zinc-900 hover:text-zinc-200' : 'hover:bg-slate-50 hover:text-slate-900'}`
             }`}
           >
-            <item.icon className={`w-5 h-5 ${activeTab === item.id ? 'text-white' : 'group-hover:text-emerald-500 transition-colors'}`} />
-            {item.label}
-          </button>
+            {({ isActive }) => (
+              <>
+                <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'group-hover:text-emerald-500 transition-colors'}`} />
+                {item.label}
+              </>
+            )}
+          </NavLink>
         ))}
 
         <div className="space-y-1">
-          <button
-            onClick={onProMenuToggle}
-            className={`w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-200 group relative ${
-              activeTab === 'pro'
+          <NavLink
+            to="/pro"
+            onClick={(e) => {
+              if (location.pathname === '/pro') {
+                e.preventDefault();
+                toggleProMenu();
+              }
+            }}
+            className={({ isActive }) => `w-full flex items-center gap-3 px-5 py-3.5 rounded-2xl transition-all duration-200 group relative ${
+              isActive
                 ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20 font-semibold'
                 : `text-zinc-500 hover:translate-x-1 ${isDarkMode ? 'hover:bg-zinc-900 hover:text-zinc-200' : 'hover:bg-slate-50 hover:text-slate-900'}`
             }`}
           >
-            <Crown className={`w-5 h-5 ${activeTab === 'pro' ? 'text-white' : 'group-hover:text-amber-500 transition-colors'}`} />
-            <span className="flex-1 text-left">Recursos PRO</span>
-            {subscription?.plan !== 'pro' && (
-              <Crown className="w-3 h-3 text-amber-500" />
+            {({ isActive }) => (
+              <>
+                <Crown className={`w-5 h-5 ${isActive ? 'text-white' : 'group-hover:text-amber-500 transition-colors'}`} />
+                <span className="flex-1 text-left">Recursos PRO</span>
+                {subscription?.plan !== 'pro' && (
+                  <Crown className="w-3 h-3 text-amber-500" />
+                )}
+                <ChevronRight className={`w-4 h-4 transition-transform duration-500 ${isProMenuOpen ? 'rotate-90' : ''}`} />
+              </>
             )}
-            <ChevronRight className={`w-4 h-4 transition-transform duration-500 ${isProMenuOpen ? 'rotate-90' : ''}`} />
-          </button>
+          </NavLink>
 
           <AnimatePresence>
             {isProMenuOpen && (
@@ -104,10 +118,7 @@ export function Sidebar({
                 {proSubNav.map((sub) => (
                   <button
                     key={sub.id}
-                    onClick={() => {
-                      onTabChange('pro');
-                      onProSubTabChange(sub.id as 'inventory' | 'portfolio' | 'revenue');
-                    }}
+                    onClick={() => setProSubTab(sub.id as 'inventory' | 'portfolio' | 'revenue')}
                     className={`w-full flex items-center gap-2 px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] transition-all ${
                       activeTab === 'pro' && activeProSubTab === sub.id
                         ? 'text-amber-500 bg-amber-500/10'
