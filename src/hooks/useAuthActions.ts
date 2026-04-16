@@ -3,6 +3,8 @@ import { signInWithPopup, GoogleAuthProvider, signOut, User } from 'firebase/aut
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { auth } from '../firebase';
 import { handleFirestoreError, OperationType } from '../utils/currency';
+import { trackLogin, trackUpgrade } from '../utils/analytics';
+import { logger } from '../utils/logger';
 import toast from 'react-hot-toast';
 
 interface UseAuthActionsParams {
@@ -13,8 +15,9 @@ export function useAuthActions({ user }: UseAuthActionsParams) {
   const handleLogin = useCallback(async () => {
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
+      trackLogin('google');
     } catch (error) {
-      console.error('Login error', error);
+      logger.error('Login failed', error as Error, { action: 'login', method: 'google' });
     }
   }, []);
 
@@ -25,6 +28,7 @@ export function useAuthActions({ user }: UseAuthActionsParams) {
     try {
       const fn = httpsCallable(getFunctions(), 'upgradeToPro');
       await fn();
+      trackUpgrade('pro');
       toast.success('Parabéns! Você agora é um usuário PRO.');
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'subscriptions');

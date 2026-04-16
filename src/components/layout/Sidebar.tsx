@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   LayoutDashboard,
@@ -13,44 +14,30 @@ import {
   BarChart3,
   Crown,
 } from 'lucide-react';
-import { User } from 'firebase/auth';
-import { CompanyPortfolio, Subscription } from '../../types';
+import { useAppContext } from '../../contexts/AppContext';
 import { isValidImageUrl } from '../../utils/sanitize';
 
 interface SidebarProps {
-  user: User;
-  portfolio: CompanyPortfolio | null;
-  subscription: Subscription | null;
-  activeTab: string;
-  activeProSubTab: string;
-  isProMenuOpen: boolean;
   isDarkMode: boolean;
-  onTabChange: (tab: 'dashboard' | 'employees' | 'expenses' | 'ai' | 'pro') => void;
-  onProSubTabChange: (sub: 'inventory' | 'portfolio' | 'revenue') => void;
-  onProMenuToggle: () => void;
   onToggleDarkMode: () => void;
   onLogout: () => void;
 }
 
 export function Sidebar({
-  user,
-  portfolio,
-  subscription,
-  activeTab,
-  activeProSubTab,
-  isProMenuOpen,
   isDarkMode,
-  onTabChange,
-  onProSubTabChange,
-  onProMenuToggle,
   onToggleDarkMode,
   onLogout,
 }: SidebarProps) {
+  const { user, portfolio, subscription, modals, toggleProMenu, setProSubTab } = useAppContext();
+  const location = useLocation();
+  const activeTab = location.pathname === '/' ? 'dashboard' : location.pathname.slice(1);
+  const isProMenuOpen = modals.isProMenuOpen;
+  const activeProSubTab = modals.activeProSubTab;
   const mainNav = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'employees', icon: Users, label: 'Capital Humano' },
-    { id: 'expenses', icon: DollarSign, label: 'Gestão Financeira' },
-    { id: 'ai', icon: BrainCircuit, label: 'IA Estratégica' },
+    { id: 'dashboard', path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { id: 'employees', path: '/employees', icon: Users, label: 'Capital Humano' },
+    { id: 'expenses', path: '/expenses', icon: DollarSign, label: 'Gestão Financeira' },
+    { id: 'ai', path: '/ai', icon: BrainCircuit, label: 'IA Estratégica' },
   ];
 
   const proSubNav = [

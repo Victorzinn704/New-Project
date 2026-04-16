@@ -153,7 +153,13 @@ export function importData(
       toast.success('Importação concluída com sucesso!');
       onImport();
     } catch (error) {
-      console.error('Erro na importação:', error);
+      // Use structured logger instead of console.error
+      import('./logger').then(({ logger }) => {
+        logger.error('Import operation failed', error as Error, {
+          action: 'import',
+          userId: user.uid,
+        });
+      });
       toast.error('Erro ao importar arquivo. Verifique se o formato está correto.');
     }
   };

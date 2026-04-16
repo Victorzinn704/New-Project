@@ -34,6 +34,14 @@ export function formatCurrency(amount: number, currency: Currency) {
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`Firestore Error [${operationType}] at ${path}:`, message);
+
+  // Use structured logger instead of console.error
+  import('./logger').then(({ logger }) => {
+    logger.error(`Firestore Error [${operationType}] at ${path}`, error as Error, {
+      operationType,
+      path: path || 'unknown',
+    });
+  });
+
   toast.error(`Erro na operação (${operationType}): ${message}`);
 }
