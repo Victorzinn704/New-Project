@@ -1,47 +1,30 @@
 import { Crown, Package, FileText, BarChart3 } from 'lucide-react';
-import { Employee, CompanyPortfolio, InventoryItem, RevenueRecord, Subscription, Currency } from '../../types';
-import { User } from 'firebase/auth';
 import { RevenueTab } from './RevenueTab';
 import { InventoryTab } from './InventoryTab';
 import { PortfolioTab } from './PortfolioTab';
+import { useAppContext } from '../../contexts/AppContext';
 
-interface ProTabProps {
-  activeProSubTab: 'inventory' | 'portfolio' | 'revenue';
-  subscription: Subscription | null;
-  user: User;
-  employees: Employee[];
-  portfolio: CompanyPortfolio | null;
-  inventory: InventoryItem[];
-  revenue: RevenueRecord[];
-  displayCurrency: Currency;
-  rates: { USD: number; EUR: number; BRL: number };
-  isDarkMode: boolean;
-  isAnalyzing: boolean;
-  onUpgradeToPro: () => void;
-  onRunStrategicDecision: () => void;
-  onOpenRevenueModal: () => void;
-  onOpenInventoryModal: () => void;
-  onOpenPortfolioModal: () => void;
-}
+export function ProTab() {
+  const {
+    modals,
+    subscription,
+    user,
+    employees,
+    portfolio,
+    inventory,
+    revenue,
+    displayCurrency,
+    rates,
+    isDarkMode,
+    isAnalyzing,
+    upgradeToPro,
+    runStrategicDecision,
+    openRevenueModal,
+    openInventoryModal,
+    openPortfolioModal,
+  } = useAppContext();
 
-export function ProTab({
-  activeProSubTab,
-  subscription,
-  user,
-  employees,
-  portfolio,
-  inventory,
-  revenue,
-  displayCurrency,
-  rates,
-  isDarkMode,
-  isAnalyzing,
-  onUpgradeToPro,
-  onRunStrategicDecision,
-  onOpenRevenueModal,
-  onOpenInventoryModal,
-  onOpenPortfolioModal,
-}: ProTabProps) {
+  const activeProSubTab = modals.activeProSubTab;
   const subTitles: Record<string, { title: string; desc: string }> = {
     revenue: { title: 'Fluxo de Caixa', desc: 'Dashboard interativo de receitas e despesas.' },
     inventory: { title: 'Gestão de Estoque', desc: 'Controle total de insumos e ativos da empresa.' },
@@ -64,7 +47,7 @@ export function ProTab({
         </div>
         {subscription?.plan !== 'pro' && (
           <button
-            onClick={onUpgradeToPro}
+            onClick={upgradeToPro}
             className="bg-amber-500 text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2 hover:bg-amber-600 transition-all shadow-xl shadow-amber-500/20"
           >
             Assinar PRO - R$ 25/mês
@@ -99,7 +82,7 @@ export function ProTab({
             ))}
           </div>
           <button
-            onClick={onUpgradeToPro}
+            onClick={upgradeToPro}
             className="px-12 py-5 bg-amber-500 text-white font-black rounded-2xl hover:bg-amber-600 transition-all transform hover:scale-105 shadow-2xl shadow-amber-500/30 uppercase tracking-widest"
           >
             Quero ser PRO agora
@@ -108,7 +91,7 @@ export function ProTab({
       ) : (
         <div className="space-y-10 animate-in slide-in-from-bottom-4 duration-500">
           {activeProSubTab === 'revenue' && (
-            <RevenueTab revenue={revenue} isDarkMode={isDarkMode} onOpenModal={onOpenRevenueModal} />
+            <RevenueTab revenue={revenue} isDarkMode={isDarkMode} onOpenModal={openRevenueModal} />
           )}
           {activeProSubTab === 'inventory' && (
             <InventoryTab
@@ -116,7 +99,7 @@ export function ProTab({
               isDarkMode={isDarkMode}
               displayCurrency={displayCurrency}
               rates={rates}
-              onOpenModal={onOpenInventoryModal}
+              onOpenModal={openInventoryModal}
             />
           )}
           {activeProSubTab === 'portfolio' && (
@@ -126,8 +109,8 @@ export function ProTab({
               user={user}
               isDarkMode={isDarkMode}
               isAnalyzing={isAnalyzing}
-              onOpenModal={onOpenPortfolioModal}
-              onRunStrategicDecision={onRunStrategicDecision}
+              onOpenModal={openPortfolioModal}
+              onRunStrategicDecision={() => runStrategicDecision('')}
             />
           )}
         </div>

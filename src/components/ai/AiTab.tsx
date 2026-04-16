@@ -1,23 +1,10 @@
 import { BrainCircuit } from 'lucide-react';
 import Markdown from 'react-markdown';
-import { Employee } from '../../types';
 import { sanitizeMarkdown } from '../../utils/sanitize';
+import { useAppContext } from '../../contexts/AppContext';
 
-interface AiTabProps {
-  employees: Employee[];
-  isAnalyzing: boolean;
-  aiAnalysis: string | null;
-  isDarkMode: boolean;
-  onRunStrategicDecision: () => void;
-}
-
-export function AiTab({
-  employees,
-  isAnalyzing,
-  aiAnalysis,
-  isDarkMode,
-  onRunStrategicDecision,
-}: AiTabProps) {
+export function AiTab() {
+  const { employees, isAnalyzing, aiAnalysis, isDarkMode, runStrategicDecision } = useAppContext();
   return (
     <div className="space-y-8 animate-in zoom-in-95 duration-500">
       <header className="text-center max-w-2xl mx-auto space-y-4">
@@ -27,7 +14,7 @@ export function AiTab({
         <h2 className="text-4xl font-bold tracking-tight">Decisão Estratégica IA</h2>
         <p className={`${isDarkMode ? 'text-zinc-400' : 'text-zinc-500'}`}>Nossa inteligência artificial analisa os dados de RH e Financeiro para sugerir as melhores rotas para sua empresa.</p>
         <button
-          onClick={onRunStrategicDecision}
+          onClick={() => runStrategicDecision('')}
           disabled={isAnalyzing}
           className="bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/30 disabled:opacity-50"
         >

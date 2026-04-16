@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import format from 'date-fns/format';
 import toast from 'react-hot-toast';
 import { db } from '../firebase';
 import { collection, doc, writeBatch } from 'firebase/firestore';

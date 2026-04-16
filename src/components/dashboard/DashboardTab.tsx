@@ -1,39 +1,46 @@
+import { lazy, Suspense, useMemo } from 'react';
 import { Users, DollarSign, Calculator } from 'lucide-react';
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
-} from 'recharts';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import format from 'date-fns/format';
+import ptBR from 'date-fns/locale/pt-BR';
 import { Currency } from '../../types';
-import { COLORS, convertAmount, formatCurrency } from '../../utils/currency';
+import { convertAmount, formatCurrency } from '../../utils/currency';
 import { useAppContext } from '../../contexts/AppContext';
+
+const DashboardCharts = lazy(() => import('./DashboardCharts').then(m => ({ default: m.DashboardCharts })));
 
 export function DashboardTab() {
   const { employees, expenses, displayCurrency, rates, isDarkMode, setDisplayCurrency, exportData, importData } = useAppContext();
-  const totalMonthlyExpenses = expenses.reduce((acc, curr) => acc + convertAmount(curr.amount, curr.currency, displayCurrency, rates), 0);
-  const totalSalaries = employees.reduce((acc, curr) => acc + convertAmount(curr.salary, 'BRL', displayCurrency, rates), 0);
 
-  const statusData = [
+  const totalMonthlyExpenses = useMemo(
+    () => expenses.reduce((acc, curr) => acc + convertAmount(curr.amount, curr.currency, displayCurrency, rates), 0),
+    [expenses, displayCurrency, rates]
+  );
+
+  const totalSalaries = useMemo(
+    () => employees.reduce((acc, curr) => acc + convertAmount(curr.salary, 'BRL', displayCurrency, rates), 0),
+    [employees, displayCurrency, rates]
+  );
+
+  const statusData = useMemo(() => [
     { name: 'Na Empresa', value: employees.filter(e => e.status === 'Na Empresa').length },
     { name: 'Home Office', value: employees.filter(e => e.status === 'Home Office').length },
     { name: 'Afastados', value: employees.filter(e => ['Atestado', 'Tratamento de Saúde'].includes(e.status)).length },
     { name: 'Outros', value: employees.filter(e => !['Na Empresa', 'Home Office', 'Atestado', 'Tratamento de Saúde'].includes(e.status)).length },
-  ];
+  ], [employees]);
 
-  const roleData = [
+  const roleData = useMemo(() => [
     { name: 'Gerente', value: employees.filter(e => e.role === 'Gerente').length },
     { name: 'Senior', value: employees.filter(e => e.role === 'Senior').length },
     { name: 'Pleno', value: employees.filter(e => e.role === 'Pleno').length },
     { name: 'Junior', value: employees.filter(e => e.role === 'Junior').length },
-  ];
+  ], [employees]);
 
-  const opexData = [
+  const opexData = useMemo(() => [
     { name: 'API', value: expenses.filter(ex => ex.type === 'API').reduce((a, c) => a + convertAmount(c.amount, c.currency, displayCurrency, rates), 0) },
     { name: 'Cloud', value: expenses.filter(ex => ex.type === 'Cloud').reduce((a, c) => a + convertAmount(c.amount, c.currency, displayCurrency, rates), 0) },
     { name: 'Utilidades', value: expenses.filter(ex => ['Luz', 'Água', 'Internet'].includes(ex.type)).reduce((a, c) => a + convertAmount(c.amount, c.currency, displayCurrency, rates), 0) },
     { name: 'Licença', value: expenses.filter(ex => ex.type === 'Licença').reduce((a, c) => a + convertAmount(c.amount, c.currency, displayCurrency, rates), 0) },
-  ];
+  ], [expenses, displayCurrency, rates]);
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
@@ -111,69 +118,17 @@ export function DashboardTab() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className={`p-8 rounded-[40px] border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
-          <h4 className="text-sm font-black uppercase tracking-widest mb-8 flex items-center gap-2">
-            <div className="w-1.5 h-4 bg-emerald-500 rounded-full" />
-            Status da Equipe
-          </h4>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={statusData}
-                  cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={8} dataKey="value"
-                >
-                  {COLORS.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="none" />)}
-                </Pie>
-                <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+      <Suspense fallback={
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {[1, 2, 3].map(i => (
+            <div key={i} className={`p-8 rounded-[40px] border h-80 flex items-center justify-center ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
+              <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ))}
         </div>
-
-        <div className={`p-8 rounded-[40px] border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
-          <h4 className="text-sm font-black uppercase tracking-widest mb-8 flex items-center gap-2">
-            <div className="w-1.5 h-4 bg-emerald-500 rounded-full" />
-            Distribuição por Cargo
-          </h4>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={roleData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#27272a' : '#f1f5f9'} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: isDarkMode ? '#a1a1aa' : '#64748b' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: isDarkMode ? '#a1a1aa' : '#64748b' }} />
-                <Tooltip
-                  cursor={{ fill: isDarkMode ? '#18181b' : '#f8fafc' }}
-                  contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: isDarkMode ? '#18181b' : '#fff', color: isDarkMode ? '#fff' : '#000', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="value" fill="#3b82f6" radius={[6, 6, 0, 0]} barSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className={`p-8 rounded-[40px] border ${isDarkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-slate-200'}`}>
-          <h4 className="text-sm font-black uppercase tracking-widest mb-8 flex items-center gap-2">
-            <div className="w-1.5 h-4 bg-emerald-500 rounded-full" />
-            OPEX por Categoria
-          </h4>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={opexData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#27272a' : '#f1f5f9'} />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: isDarkMode ? '#a1a1aa' : '#64748b' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 700, fill: isDarkMode ? '#a1a1aa' : '#64748b' }} />
-                <Tooltip
-                  cursor={{ fill: isDarkMode ? '#18181b' : '#f8fafc' }}
-                  contentStyle={{ borderRadius: '16px', border: 'none', backgroundColor: isDarkMode ? '#18181b' : '#fff', color: isDarkMode ? '#fff' : '#000', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                />
-                <Bar dataKey="value" fill="#10b981" radius={[6, 6, 0, 0]} barSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
+      }>
+        <DashboardCharts statusData={statusData} roleData={roleData} opexData={opexData} isDarkMode={isDarkMode} />
+      </Suspense>
     </div>
   );
 }

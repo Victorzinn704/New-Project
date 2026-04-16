@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -13,6 +13,8 @@ import {
   Package,
   BarChart3,
   Crown,
+  Menu,
+  X,
 } from 'lucide-react';
 import { useAppContext } from '../../contexts/AppContext';
 import { isValidImageUrl } from '../../utils/sanitize';
@@ -33,6 +35,7 @@ export function Sidebar({
   const activeTab = location.pathname === '/' ? 'dashboard' : location.pathname.slice(1);
   const isProMenuOpen = modals.isProMenuOpen;
   const activeProSubTab = modals.activeProSubTab;
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const mainNav = [
     { id: 'dashboard', path: '/', icon: LayoutDashboard, label: 'Dashboard' },
     { id: 'employees', path: '/employees', icon: Users, label: 'Capital Humano' },
