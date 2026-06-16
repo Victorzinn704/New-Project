@@ -57,9 +57,10 @@ export default defineConfig(({ mode }) => {
     build: {
       rollupOptions: {
         output: {
-          manualChunks: {
-            recharts: ['recharts'],
-            firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/functions', 'firebase/app-check'],
+          manualChunks(id) {
+            if (id.includes('node_modules/recharts')) return 'recharts';
+            if (id.includes('node_modules/firebase') || id.includes('node_modules/@firebase')) return 'firebase';
+            return undefined;
           },
         },
       },

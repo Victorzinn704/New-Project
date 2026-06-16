@@ -2,13 +2,15 @@ import { trace } from 'firebase/performance';
 import { performance } from '../firebase';
 import { logger } from './logger';
 
+const now = () => globalThis.performance?.now?.() ?? Date.now();
+
 export async function instrumentOperation<T>(
   operationName: string,
   operation: () => Promise<T>,
   metadata?: Record<string, string>
 ): Promise<T> {
-  const startTime = performance?.now() || Date.now();
-  let perfTrace = null;
+  const startTime = now();
+  let perfTrace: ReturnType<typeof trace> | null = null;
 
   try {
     // Start Firebase Performance trace
@@ -26,7 +28,7 @@ export async function instrumentOperation<T>(
 
     const result = await operation();
 
-    const duration = (performance?.now() || Date.now()) - startTime;
+    const duration = now() - startTime;
     logger.info(`Operation completed: ${operationName}`, {
       operation: operationName,
       duration: `${duration.toFixed(2)}ms`,
@@ -35,7 +37,7 @@ export async function instrumentOperation<T>(
 
     return result;
   } catch (error) {
-    const duration = (performance?.now() || Date.now()) - startTime;
+    const duration = now() - startTime;
     logger.error(`Operation failed: ${operationName}`, error as Error, {
       operation: operationName,
       duration: `${duration.toFixed(2)}ms`,
@@ -50,12 +52,12 @@ export async function instrumentOperation<T>(
 }
 
 export function measureSync<T>(operationName: string, operation: () => T, metadata?: Record<string, string>): T {
-  const startTime = performance?.now() || Date.now();
+  const startTime = now();
 
   try {
     logger.debug(`Starting sync operation: ${operationName}`, { operation: operationName, ...metadata });
     const result = operation();
-    const duration = (performance?.now() || Date.now()) - startTime;
+    const duration = now() - startTime;
     logger.debug(`Sync operation completed: ${operationName}`, {
       operation: operationName,
       duration: `${duration.toFixed(2)}ms`,
@@ -63,7 +65,7 @@ export function measureSync<T>(operationName: string, operation: () => T, metada
     });
     return result;
   } catch (error) {
-    const duration = (performance?.now() || Date.now()) - startTime;
+    const duration = now() - startTime;
     logger.error(`Sync operation failed: ${operationName}`, error as Error, {
       operation: operationName,
       duration: `${duration.toFixed(2)}ms`,
