@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import type { FormEvent } from 'react';
 import { User } from 'firebase/auth';
 import { collection, addDoc, updateDoc, doc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -32,7 +33,7 @@ export function useFirestoreMutations({
   onCloseRevenueModal,
   onClosePortfolioModal,
 }: UseFirestoreMutationsParams) {
-  const addEmployee = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+  const addEmployee = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) return;
     const formData = new FormData(e.currentTarget);
@@ -75,7 +76,7 @@ export function useFirestoreMutations({
     }
   }, []);
 
-  const addExpense = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+  const addExpense = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) return;
     const formData = new FormData(e.currentTarget);
@@ -97,7 +98,7 @@ export function useFirestoreMutations({
     }
   }, [user, onCloseExpenseModal]);
 
-  const addInventoryItem = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+  const addInventoryItem = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user || subscription?.plan !== 'pro') return;
     const formData = new FormData(e.currentTarget);
@@ -118,7 +119,7 @@ export function useFirestoreMutations({
     }
   }, [user, subscription, onCloseInventoryModal]);
 
-  const addRevenueRecord = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+  const addRevenueRecord = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user || subscription?.plan !== 'pro') return;
     const formData = new FormData(e.currentTarget);
@@ -140,7 +141,7 @@ export function useFirestoreMutations({
     }
   }, [user, subscription, onCloseRevenueModal]);
 
-  const savePortfolio = useCallback(async (e: React.FormEvent<HTMLFormElement>) => {
+  const savePortfolio = useCallback(async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user || subscription?.plan !== 'pro') return;
     const formData = new FormData(e.currentTarget);

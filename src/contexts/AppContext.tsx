@@ -1,4 +1,5 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext } from 'react';
+import type { ChangeEvent, FormEvent, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { useTheme } from '../hooks/useTheme';
 import { useAuthSession } from '../hooks/useAuthSession';
@@ -8,7 +9,10 @@ import { useFirestoreData } from '../hooks/useFirestoreData';
 import { useAiAnalysis } from '../hooks/useAiAnalysis';
 import { useModalState } from '../hooks/useModalState';
 import { useFirestoreMutations } from '../hooks/useFirestoreMutations';
+import { exportData as exportBackupData, importData as importBackupData } from '../utils/importExport';
 import { Employee, Expense, InventoryItem, RevenueRecord, CompanyPortfolio, Subscription, Currency } from '../types';
+
+type FormSubmitHandler = (e: FormEvent<HTMLFormElement>) => Promise<void>;
 
 interface AppContextValue {
   // Auth
@@ -59,16 +63,16 @@ interface AppContextValue {
   toggleProMenu: () => void;
 
   // Mutations
-  addEmployee: (employee: Employee) => Promise<void>;
+  addEmployee: FormSubmitHandler;
   deleteEmployee: (id: string) => Promise<void>;
-  addExpense: (expense: Expense) => Promise<void>;
-  addInventoryItem: (item: InventoryItem) => Promise<void>;
-  addRevenueRecord: (record: RevenueRecord) => Promise<void>;
-  savePortfolio: (portfolio: CompanyPortfolio) => Promise<void>;
+  addExpense: FormSubmitHandler;
+  addInventoryItem: FormSubmitHandler;
+  addRevenueRecord: FormSubmitHandler;
+  savePortfolio: FormSubmitHandler;
 
   // Utils
   exportData: () => void;
-  importData: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  importData: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -136,8 +140,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     addRevenueRecord: mutations.addRevenueRecord,
     savePortfolio: mutations.savePortfolio,
     exportData: () => {
-      const { exportData: exportFn } = require('../utils/importExport');
-      exportFn({
+      exportBackupData({
         employees: data.employees,
         expenses: data.expenses,
         inventory: data.inventory,
@@ -145,9 +148,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         portfolio: data.portfolio
       });
     },
-    importData: (e: React.ChangeEvent<HTMLInputElement>) => {
-      const { importData: importFn } = require('../utils/importExport');
-      importFn(e, { user, subscription: data.subscription, onImport: () => {} });
+    importData: (e: ChangeEvent<HTMLInputElement>) => {
+      if (!user) return;
+
+      importBackupData(e, {
+        user,
+        subscription: data.subscription,
+        onImport: () => {},
+      });
     },
   };
 

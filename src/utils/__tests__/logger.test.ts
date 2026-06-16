@@ -24,7 +24,9 @@ describe('Logger', () => {
   it('should format log entries correctly', () => {
     const consoleSpy = vi.spyOn(console, 'info');
     logger.info('Test message', { userId: 'user-123', action: 'test-action' });
-    const call = consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1][0];
+    const lastCall = consoleSpy.mock.calls.at(-1);
+    expect(lastCall).toBeDefined();
+    const call = String(lastCall?.[0] ?? '');
     expect(call).toContain('[INFO]');
     expect(call).toContain('user-123');
   });

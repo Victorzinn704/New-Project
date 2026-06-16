@@ -1,4 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+vi.mock('../../firebase', () => ({
+  db: {},
+}));
+
 import { exportData } from '../importExport';
 import { Employee } from '../../types';
 

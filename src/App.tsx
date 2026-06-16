@@ -33,7 +33,6 @@ function AppContent() {
     isDarkMode,
     toggleDarkMode,
     portfolio,
-    subscription,
     modals,
     closeEmployeeModal,
     closeExpenseModal,
@@ -57,9 +56,6 @@ function AppContent() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-[#09090b] text-zinc-100' : 'bg-[#f8fafc] text-slate-900'} font-sans flex`}>
       <Sidebar
-        user={user}
-        portfolio={portfolio}
-        subscription={subscription}
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
         onLogout={handleLogout}

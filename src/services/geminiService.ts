@@ -20,6 +20,8 @@ async function callAI(
 }
 
 export async function analyzeEmployeePerformance(employee: Employee) {
+  const employeeId = employee.id ?? 'unpersisted';
+
   return instrumentOperation(
     'ai_analyze_employee',
     async () => {
@@ -38,14 +40,14 @@ export async function analyzeEmployeePerformance(employee: Employee) {
         return result;
       } catch (error) {
         logger.error('AI employee analysis failed', error as Error, {
-          employeeId: employee.id,
+          employeeId,
           employeeName: employee.name,
         });
         trackAiAnalysis('employee', false);
         throw error;
       }
     },
-    { type: 'employee', employeeId: employee.id }
+    { type: 'employee', employeeId }
   );
 }
 

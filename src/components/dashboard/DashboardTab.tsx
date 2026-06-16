@@ -1,7 +1,7 @@
 import { lazy, Suspense, useMemo } from 'react';
 import { Users, DollarSign, Calculator } from 'lucide-react';
-import format from 'date-fns/format';
-import ptBR from 'date-fns/locale/pt-BR';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale/pt-BR';
 import { Currency } from '../../types';
 import { convertAmount, formatCurrency } from '../../utils/currency';
 import { useAppContext } from '../../contexts/AppContext';
